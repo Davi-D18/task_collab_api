@@ -1,0 +1,11 @@
+from rest_framework import generics
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from apps.accounts.schemas.account_schema import UserSerializer, TokenObtainPairSerializer
+from django.contrib.auth import get_user_model
+
+class RegisterView(generics.CreateAPIView):
+    queryset = get_user_model().objects.all()
+    serializer_class = UserSerializer
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = TokenObtainPairSerializer
