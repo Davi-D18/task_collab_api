@@ -22,6 +22,7 @@ var/
 
 # Django
 *.log
+.db
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -36,6 +37,3 @@ venv/
 .vscode/
 *.swp
 *.swo
-
-# Environment variables
-# .env
