@@ -5,10 +5,11 @@ from django.contrib.auth.models import User
 class TaskSerializer(serializers.ModelSerializer):
     usuario = serializers.SlugRelatedField(
         queryset=User.objects.all(),
-        slug_field='username'
+        slug_field='username',
+        write_only=True
     )
 
-    def validate_user(self, value):
+    def validate_usuario(self, value):
         try:
             user = User.objects.get(username=value)
             return user

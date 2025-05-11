@@ -4,8 +4,6 @@ from apps.tasks.models.tasks import Tasks
 from apps.tasks.permissions import IsOwner
 from rest_framework.exceptions import PermissionDenied
 
-from apps.tasks.services.tasks_service import check_permission
-
 
 class TasksViewSet(ModelViewSet):
     queryset = Tasks.objects.all()
@@ -13,11 +11,11 @@ class TasksViewSet(ModelViewSet):
     permission_classes = [IsOwner]
 
     def get_queryset(self):
-        queryset = Tasks.objects.filter(user=self.request.user)
+        queryset = Tasks.objects.filter(usuario=self.request.user)
         return queryset
 
     def perform_create(self, serializer):
         # Checa payload antes de salvar
-        if not check_permission(self):
+        if not IsOwner.has_check_permission(self):
             raise PermissionDenied("Não é permitido criar tarefa para outro usuário.")
         serializer.save()
