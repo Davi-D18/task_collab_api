@@ -7,6 +7,7 @@ DB = DATABASES["default"]  # noqa: F405
 # Email - Override to use console backend in development
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Swagger settings
 SWAGGER_SETTINGS = {
