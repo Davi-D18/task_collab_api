@@ -1,4 +1,6 @@
 from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import NotAuthenticated, PermissionDenied
+
 
 class IsOwner(BasePermission):
     """
@@ -11,6 +13,23 @@ class IsOwner(BasePermission):
     Herda de:
         BasePermission: Classe base para permissões customizadas no Django REST Framework
     """
+
+    def has_permission(self, request, view):
+        # Bypass para geração de esquema (Swagger/OpenAPI)
+        if getattr(view, 'swagger_fake_view', False):
+            return True
+
+        # Requer autenticação
+        if not request.user or not request.user.is_authenticated:
+            raise NotAuthenticated("Você precisa estar autenticado para usar esta API.")
+
+        # Se for criação, valida payload
+        if request.method == 'POST':
+            user_id = request.data.get('usuario')
+            if str(user_id) != str(request.user):
+                raise PermissionDenied("Você não pode criar tarefa para outro usuário.")
+
+        return True
 
     def has_object_permission(self, request, view, obj) -> bool:
         """

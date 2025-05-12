@@ -1,8 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from apps.tasks.schemas.task_schema import TaskSerializer
 from apps.tasks.models.tasks import Tasks
-from apps.tasks.permissions import IsOwner
-from rest_framework.exceptions import PermissionDenied
+from common.permissions.is_owner import IsOwner
 
 
 class TasksViewSet(ModelViewSet):
@@ -11,11 +10,9 @@ class TasksViewSet(ModelViewSet):
     permission_classes = [IsOwner]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()
+            
+        # Filtra as tarefas pelo usuário autenticado
         queryset = Tasks.objects.filter(usuario=self.request.user)
         return queryset
-
-    def perform_create(self, serializer):
-        # Checa payload antes de salvar
-        if not IsOwner.has_check_permission(self):
-            raise PermissionDenied("Não é permitido criar tarefa para outro usuário.")
-        serializer.save()
