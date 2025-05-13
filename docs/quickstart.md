@@ -13,7 +13,7 @@ Este guia fornece instruções passo a passo para configurar e começar a usar a
 ### 1. Clone o repositório (ou baixe o código-fonte)
 
 ```bash
-git clone https://github.com/seu-usuario/task_collab_api.git
+git clone https://github.com/Davi-D18/task_collab_api.git
 cd task_collab_api
 ```
 
@@ -45,12 +45,14 @@ Crie um arquivo `.env` na raiz do projeto baseado no arquivo `.env.example`:
 cp .env.example .env
 ```
 
-Edite o arquivo `.env` e configure as variáveis necessárias:
+Edite o arquivo `.env` e configure as variáveis necessárias de banco de dados (caso queira usar outro):
 
-```
-DJANGO_SECRET_KEY=sua-chave-secreta-aqui
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
+```env
+DB_NAME=nome-do-banco
+DB_USER=usuario
+DB_PASSWORD=senha
+DB_HOST=url-para-o-banco(ou localhost para um banco de dados local)
+DB_PORT=porta
 ```
 
 ### 5. Execute as migrações do banco de dados
@@ -71,7 +73,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-O servidor estará disponível em `http://127.0.0.1:8000/`.
+O servidor estará disponível em `http://127.0.0.1:8000/api/v1/`.
 
 ## Primeiros Passos
 
@@ -80,7 +82,7 @@ O servidor estará disponível em `http://127.0.0.1:8000/`.
 Acesse a documentação interativa da API em:
 
 ```
-http://127.0.0.1:8000/swagger/
+http://127.0.0.1:8000/docs/
 ```
 
 ### Registrando um usuário
@@ -93,7 +95,7 @@ curl -X POST \
   -H 'Content-Type: application/json' \
   -d '{
     "username": "usuario_teste",
-    "email": "usuario@exemplo.com",
+    "email": "usuario@exemplo.com", # Opcional
     "password": "senha123"
 }'
 ```
@@ -166,7 +168,6 @@ Exemplo de configuração para produção no arquivo `.env`:
 DJANGO_SECRET_KEY=chave-secreta-longa-e-aleatoria
 DEBUG=False
 ALLOWED_HOSTS=seu-dominio.com
-DB_ENGINE=django.db.backends.postgresql
 DB_NAME=task_collab
 DB_USER=seu_usuario
 DB_PASSWORD=sua_senha

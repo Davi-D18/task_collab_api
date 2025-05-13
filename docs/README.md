@@ -22,9 +22,6 @@ A API Task Collab é uma solução para gerenciamento de tarefas pessoais e cola
 
 - Autenticação baseada em JWT (JSON Web Tokens)
 - Operações CRUD completas para tarefas
-- Filtragem de tarefas por status, prioridade e outros campos
-- Ordenação de resultados
-- Paginação de resultados
 - Segurança baseada em propriedade (cada usuário só acessa suas próprias tarefas)
 
 ## Requisitos

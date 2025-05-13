@@ -80,53 +80,8 @@ ou
 {
   "titulo": [
     "Este campo é obrigatório."
-  ],
-  "prioridade": [
-    "Valor inválido. As opções são: 'A', 'M', 'B'."
   ]
 }
-```
-
-## Paginação
-
-Endpoints que retornam múltiplos itens são paginados por padrão. A resposta inclui:
-
-```json
-{
-  "count": 100,
-  "next": "http://api.exemplo.com/api/v1/tasks/?page=2",
-  "previous": null,
-  "results": [
-    // itens da página atual
-  ]
-}
-```
-
-Parâmetros de paginação:
-- `page`: Número da página (padrão: 1)
-- `page_size`: Itens por página (padrão: 10, máximo: 100)
-
-## Filtragem e Ordenação
-
-Muitos endpoints suportam filtragem e ordenação através de parâmetros de consulta:
-
-### Filtragem
-
-Exemplo:
-```
-GET /api/v1/tasks/?status=P&prioridade=A
-```
-
-### Ordenação
-
-Exemplo:
-```
-GET /api/v1/tasks/?ordering=prazo
-```
-
-Para ordenação descendente, adicione um `-` antes do campo:
-```
-GET /api/v1/tasks/?ordering=-prazo
 ```
 
 ## Próximos Passos
