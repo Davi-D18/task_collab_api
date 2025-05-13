@@ -4,7 +4,7 @@ from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 
 class IsOwner(BasePermission):
     """
-    Classe de permissão que permite acesso apenas se o usuário autenticado for o mesmo do campo 'user' do objeto.
+    Classe de permissão que permite acesso apenas se o usuário autenticado for o mesmo do campo 'usuario' do objeto.
     Para ações de criação, verifica o payload antes de salvar.
 
     Atributos:
