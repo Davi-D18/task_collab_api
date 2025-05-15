@@ -23,11 +23,7 @@ class Tasks(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
 
     def get_status(self):
-        # Usando o dicionário STATUS definido globalmente para retornar o valor completo
-        for code, description in STATUS:
-            if self.status == code:
-                return description
-        return "Status desconhecido"
+        return dict(STATUS).get(self.status, "Status desconhecido")
 
     class Meta:
         ordering = ['id']

@@ -6,26 +6,11 @@ class TaskSerializer(serializers.ModelSerializer):
     usuario = serializers.SlugRelatedField(
         queryset=User.objects.all(),
         slug_field='username',
-        write_only=True
+        write_only=True,
     )
 
-    status = serializers.ChoiceField(choices=STATUS, default="P", write_only=True)
-    prioridade = serializers.ChoiceField(choices=PRIORIDADES, write_only=True)
-    
-    # Adiciona campo para o valor descritivo do status
-    status_display = serializers.SerializerMethodField()
-    
-    # Adiciona campo para o valor descritivo da prioridade
-    prioridade_display = serializers.SerializerMethodField()
-
-    def get_status_display(self, obj):
-        return obj.get_status()
-    
-    def get_prioridade_display(self, obj):
-        for code, description in PRIORIDADES:
-            if obj.prioridade == code:
-                return description
-        return "Prioridade desconhecida"
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    prioridade_display = serializers.CharField(source='get_prioridade_display', read_only=True)
 
     def validate_usuario(self, value):
         try:
@@ -37,3 +22,4 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tasks
         fields = '__all__'
+        extra_fields = ['status_display', 'prioridade_display']
