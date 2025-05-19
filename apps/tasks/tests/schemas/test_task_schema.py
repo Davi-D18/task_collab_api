@@ -43,11 +43,15 @@ class TaskSerializerTestCase(TestCase):
         # Verifica se os campos foram serializados corretamente
         self.assertEqual(data['titulo'], 'Tarefa de Teste')
         self.assertEqual(data['descricao'], 'Descrição da tarefa de teste')
-        self.assertEqual(data['prioridade'], 'M')
-        self.assertEqual(data['status'], 'P')
+        self.assertEqual(data['status_display'], 'Pendente')
+        self.assertEqual(data['prioridade_display'], 'Media')
         
         # Verifica se o campo 'usuario' não está presente (é write_only)
         self.assertNotIn('usuario', data)
+        
+        # Verifica se os campos originais não estão presentes (são write_only)
+        self.assertNotIn('status', data)
+        self.assertNotIn('prioridade', data)
     
     def test_task_deserialization_valid_data(self):
         """

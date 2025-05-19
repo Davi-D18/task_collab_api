@@ -64,15 +64,15 @@ class TasksModelTestCase(TestCase):
     
     def test_get_status_method(self):
         """
-        Testa o método get_status que retorna o status em formato legível.
+        Testa o método get_status_display que retorna o status em formato legível.
         """
-        self.assertEqual(self.task_pendente.get_status(), 'Pendente')
-        self.assertEqual(self.task_em_andamento.get_status(), 'Em Andamento')
-        self.assertEqual(self.task_concluida.get_status(), 'Concluída')
+        self.assertEqual(self.task_pendente.get_status_display(), 'Pendente')
+        self.assertEqual(self.task_em_andamento.get_status_display(), 'Em Andamento')
+        self.assertEqual(self.task_concluida.get_status_display(), 'Concluída')
     
     def test_unknown_status(self):
         """
-        Testa o comportamento do método get_status com um status desconhecido.
+        Testa o comportamento com um status desconhecido.
         """
         # Cria uma tarefa com status inválido (apenas para teste)
         task_invalid = Tasks(
@@ -84,8 +84,8 @@ class TasksModelTestCase(TestCase):
             status='X'  # Status inválido
         )
         
-        # Verifica se o método retorna a mensagem de status desconhecido
-        self.assertEqual(task_invalid.get_status(), 'Status desconhecido')
+        # Para status inválido, Django retorna o valor original
+        self.assertEqual(task_invalid.get_status_display(), 'X')
     
     def test_str_method(self):
         """
