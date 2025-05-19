@@ -9,9 +9,27 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ['username', 'email', 'password']
         extra_kwargs = {
-            'username': {'required': True},
-            'email': {'required': True},
+            'username': {'required': True, 'error_messages': {'required': 'O nome de usuário é obrigatório'}},
+            'email': {'required': True, 'error_messages': {'required': 'O email é obrigatório'}},
         }
+
+    def validate_email(self, value):
+        """
+        Valida se o email já existe no sistema.
+        """
+        User = get_user_model()
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("O email já está em uso")
+        return value
+
+    def validate_username(self, value):
+        """
+        Valida se o nome de usuário já existe no sistema.
+        """
+        User = get_user_model()
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("O nome de usuário já está em uso")
+        return value
 
     def create(self, validated_data):
         user = get_user_model().objects.create_user(
@@ -23,8 +41,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class TokenObtainPairSerializer(TokenObtainPairSerializer):
-    credential = serializers.CharField(write_only=True)
-    password = serializers.CharField(write_only=True)
+    credential = serializers.CharField(
+        write_only=True,
+        error_messages={'required': 'O nome de usuário ou email é obrigatório'}
+    )
+    password = serializers.CharField(
+        write_only=True,
+        error_messages={'required': 'A senha é obrigatória'}
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
