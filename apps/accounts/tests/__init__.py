@@ -1,3 +1,1 @@
-from django.test import TestCase
-
-# Create your tests here.
+# Este arquivo é necessário para que o Python reconheça este diretório como um pacote de testes
