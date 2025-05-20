@@ -55,6 +55,13 @@ DB_HOST=url-para-o-banco(ou localhost para um banco de dados local)
 DB_PORT=porta
 ```
 
+Altere uma configuração no arquivo base.py:
+```py
+'ENGINE': 'django.db.backends.{banco}'
+```
+
+Em `banco` mude para outro banco, exemplo "mysql", após isso, instale os pacotes necessários como `mysqlclient` para o MySql
+
 ### 5. Execute as migrações do banco de dados
 
 ```bash

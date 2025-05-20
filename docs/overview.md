@@ -28,7 +28,8 @@ task_collab_api/
 │       └── schemas/       # Serializadores para modelos de tarefas
 │
 ├── common/                # Componentes compartilhados entre apps
-│   └── permissions/       # Classes de permissão personalizadas
+│   ├── permissions/       # Classes de permissão personalizadas
+│   └── exceptions/        # Definições de exceções personalizadas e tratamento de erros
 │
 ├── core/                  # Configurações principais do projeto
 │   ├── settings/          # Configurações do Django
