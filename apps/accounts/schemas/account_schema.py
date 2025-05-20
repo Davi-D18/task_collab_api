@@ -76,7 +76,7 @@ class TokenObtainPairSerializer(TokenObtainPairSerializer):
             attrs['username'] = user.username  # Necessário para o SimpleJWT
             return super().validate(attrs)
         else:
-            raise serializers.ValidationError('Credenciais inválidas.')
+            raise serializers.ValidationError({'': 'Credenciais inválidas'})
 
     @classmethod
     def get_token(cls, user):
