@@ -43,7 +43,7 @@ task_collab_api/
 - **Django**: Framework web Python para desenvolvimento rápido
 - **Django REST Framework**: Toolkit para construção de APIs RESTful
 - **Simple JWT**: Implementação de autenticação JWT para Django REST Framework
-- **SQLite/MySQL**: Banco de dados (SQLite para desenvolvimento, MySQL para produção)
+- **SQLite/PostgreSql**: Banco de dados (SQLite para desenvolvimento, PostgreSql para produção)
 - **Swagger/OpenAPI**: Documentação interativa da API
 
 ## Fluxo de Dados
