@@ -4,7 +4,7 @@ import os
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-DB = DATABASES["production"]
+DATABASES["default"] = DATABASES["production"]
 
 # Security settings
 SECURE_SSL_REDIRECT = True
