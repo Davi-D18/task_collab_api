@@ -22,6 +22,10 @@ else
   echo "✅ Arquivos estáticos já coletados, pulando collectstatic."
 fi
 
-# 4. Inicia o Gunicorn na porta definida pelo Render
+# 4. Criar superusuário a partir das variáveis de ambiente
+echo "👤 Criando superusuário..."
+python scripts/create_superuser.py
+
+# 5. Inicia o Gunicorn na porta definida pelo Render
 echo "🚀 Iniciando Gunicorn..."
 exec gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
