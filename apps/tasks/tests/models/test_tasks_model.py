@@ -1,116 +1,129 @@
-from django.test import TestCase
+import pytest
 from django.contrib.auth.models import User
 from apps.tasks.models.tasks import Tasks
 from datetime import date
 
 
-class TasksModelTestCase(TestCase):
-    """
-    Testes para o modelo Tasks que representa as tarefas no sistema.
-    """
+@pytest.fixture
+def user():
+    """Fixture para criar um usuário de teste."""
+    return User.objects.create_user(
+        username='usuario_teste',
+        email='teste@example.com',
+        password='senha123'
+    )
 
-    def setUp(self):
-        """
-        Configuração inicial para os testes.
-        Cria um usuário e tarefas para serem usados nos testes.
-        """
-        # Cria um usuário para teste
-        self.user = User.objects.create_user(
-            username='usuario_teste',
-            email='teste@example.com',
-            password='senha123'
-        )
-        
-        # Cria tarefas com diferentes status
-        self.task_pendente = Tasks.objects.create(
-            usuario=self.user,
-            titulo='Tarefa Pendente',
-            descricao='Descrição da tarefa pendente',
-            prioridade='A',
-            prazo=date.today(),
-            status='P'
-        )
-        
-        self.task_em_andamento = Tasks.objects.create(
-            usuario=self.user,
-            titulo='Tarefa Em Andamento',
-            descricao='Descrição da tarefa em andamento',
-            prioridade='M',
-            prazo=date.today(),
-            status='EA'
-        )
-        
-        self.task_concluida = Tasks.objects.create(
-            usuario=self.user,
-            titulo='Tarefa Concluída',
-            descricao='Descrição da tarefa concluída',
-            prioridade='B',
-            prazo=date.today(),
-            status='C'
-        )
+
+@pytest.fixture
+def task_pendente(user):
+    """Fixture para criar uma tarefa com status pendente."""
+    return Tasks.objects.create(
+        usuario=user,
+        titulo='Tarefa Pendente',
+        descricao='Descrição da tarefa pendente',
+        prioridade='A',
+        prazo=date.today(),
+        status='P'
+    )
+
+
+@pytest.fixture
+def task_em_andamento(user):
+    """Fixture para criar uma tarefa com status em andamento."""
+    return Tasks.objects.create(
+        usuario=user,
+        titulo='Tarefa Em Andamento',
+        descricao='Descrição da tarefa em andamento',
+        prioridade='M',
+        prazo=date.today(),
+        status='EA'
+    )
+
+
+@pytest.fixture
+def task_concluida(user):
+    """Fixture para criar uma tarefa com status concluída."""
+    return Tasks.objects.create(
+        usuario=user,
+        titulo='Tarefa Concluída',
+        descricao='Descrição da tarefa concluída',
+        prioridade='B',
+        prazo=date.today(),
+        status='C'
+    )
+
+
+@pytest.fixture
+def task_invalid(user):
+    """Fixture para criar uma tarefa com status inválido."""
+    return Tasks(
+        usuario=user,
+        titulo='Tarefa Inválida',
+        descricao='Descrição da tarefa com status inválido',
+        prioridade='M',
+        prazo=date.today(),
+        status='X'  # Status inválido
+    )
+
+
+@pytest.mark.django_db
+def test_task_creation_creates_tasks_correctly(task_pendente, task_em_andamento, task_concluida, user):
+    """Testa se as tarefas são criadas corretamente com os atributos esperados."""
+    # Arrange - já feito pelas fixtures
     
-    def test_task_creation(self):
-        """
-        Testa se as tarefas foram criadas corretamente.
-        """
-        self.assertEqual(self.task_pendente.titulo, 'Tarefa Pendente')
-        self.assertEqual(self.task_em_andamento.titulo, 'Tarefa Em Andamento')
-        self.assertEqual(self.task_concluida.titulo, 'Tarefa Concluída')
-        
-        # Verifica se o usuário foi associado corretamente
-        self.assertEqual(self.task_pendente.usuario, self.user)
-        self.assertEqual(self.task_em_andamento.usuario, self.user)
-        self.assertEqual(self.task_concluida.usuario, self.user)
+    # Assert
+    assert task_pendente.titulo == 'Tarefa Pendente'
+    assert task_em_andamento.titulo == 'Tarefa Em Andamento'
+    assert task_concluida.titulo == 'Tarefa Concluída'
     
-    def test_get_status_method(self):
-        """
-        Testa o método get_status_display que retorna o status em formato legível.
-        """
-        self.assertEqual(self.task_pendente.get_status_display(), 'Pendente')
-        self.assertEqual(self.task_em_andamento.get_status_display(), 'Em Andamento')
-        self.assertEqual(self.task_concluida.get_status_display(), 'Concluída')
-    
-    def test_unknown_status(self):
-        """
-        Testa o comportamento com um status desconhecido.
-        """
-        # Cria uma tarefa com status inválido (apenas para teste)
-        task_invalid = Tasks(
-            usuario=self.user,
-            titulo='Tarefa Inválida',
-            descricao='Descrição da tarefa com status inválido',
-            prioridade='M',
-            prazo=date.today(),
-            status='X'  # Status inválido
-        )
-        
-        # Para status inválido, Django retorna o valor original
-        self.assertEqual(task_invalid.get_status_display(), 'X')
-    
-    def test_str_method(self):
-        """
-        Testa o método __str__ que deve retornar o título da tarefa.
-        """
-        self.assertEqual(str(self.task_pendente), 'Tarefa Pendente')
-        self.assertEqual(str(self.task_em_andamento), 'Tarefa Em Andamento')
-        self.assertEqual(str(self.task_concluida), 'Tarefa Concluída')
-    
-    def test_meta_options(self):
-        """
-        Testa as opções de Meta do modelo.
-        """
-        self.assertEqual(Tasks._meta.verbose_name, 'Tarefa')
-        self.assertEqual(Tasks._meta.verbose_name_plural, 'Tarefas')
-        self.assertEqual(Tasks._meta.ordering, ['id'])
-    
-    def test_field_verbose_names(self):
-        """
-        Testa se os nomes verbosos dos campos estão corretos.
-        """
-        self.assertEqual(Tasks._meta.get_field('usuario').verbose_name, 'Usuário')
-        self.assertEqual(Tasks._meta.get_field('titulo').verbose_name, 'Titulo')
-        self.assertEqual(Tasks._meta.get_field('descricao').verbose_name, 'Descrição')
-        self.assertEqual(Tasks._meta.get_field('prioridade').verbose_name, 'Prioridade')
-        self.assertEqual(Tasks._meta.get_field('prazo').verbose_name, 'Prazo')
-        self.assertEqual(Tasks._meta.get_field('status').verbose_name, 'Status')
-        self.assertEqual(Tasks._meta.get_field('criado_em').verbose_name, 'Criado em')
+    # Verifica se o usuário foi associado corretamente
+    assert task_pendente.usuario == user
+    assert task_em_andamento.usuario == user
+    assert task_concluida.usuario == user
+
+
+@pytest.mark.django_db
+def test_get_status_display_returns_readable_status(task_pendente, task_em_andamento, task_concluida):
+    """Testa se o método get_status_display retorna o status em formato legível."""
+    # Act & Assert
+    assert task_pendente.get_status_display() == 'Pendente'
+    assert task_em_andamento.get_status_display() == 'Em Andamento'
+    assert task_concluida.get_status_display() == 'Concluída'
+
+
+@pytest.mark.django_db
+def test_unknown_status_returns_original_value(task_invalid):
+    """Testa se um status desconhecido retorna o valor original."""
+    # Act & Assert
+    assert task_invalid.get_status_display() == 'X'
+
+
+@pytest.mark.django_db
+def test_str_method_returns_task_title(task_pendente, task_em_andamento, task_concluida):
+    """Testa se o método __str__ retorna o título da tarefa."""
+    # Act & Assert
+    assert str(task_pendente) == 'Tarefa Pendente'
+    assert str(task_em_andamento) == 'Tarefa Em Andamento'
+    assert str(task_concluida) == 'Tarefa Concluída'
+
+
+@pytest.mark.django_db
+def test_meta_options_are_correctly_defined():
+    """Testa se as opções de Meta do modelo estão definidas corretamente."""
+    # Act & Assert
+    assert Tasks._meta.verbose_name == 'Tarefa'
+    assert Tasks._meta.verbose_name_plural == 'Tarefas'
+    assert Tasks._meta.ordering == ['id']
+
+
+@pytest.mark.django_db
+def test_field_verbose_names_are_correctly_defined():
+    """Testa se os nomes verbosos dos campos estão definidos corretamente."""
+    # Act & Assert
+    assert Tasks._meta.get_field('usuario').verbose_name == 'Usuário'
+    assert Tasks._meta.get_field('titulo').verbose_name == 'Titulo'
+    assert Tasks._meta.get_field('descricao').verbose_name == 'Descrição'
+    assert Tasks._meta.get_field('prioridade').verbose_name == 'Prioridade'
+    assert Tasks._meta.get_field('prazo').verbose_name == 'Prazo'
+    assert Tasks._meta.get_field('status').verbose_name == 'Status'
+    assert Tasks._meta.get_field('criado_em').verbose_name == 'Criado em'

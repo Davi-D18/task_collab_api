@@ -1,269 +1,248 @@
-from django.test import TestCase
-from django.urls import reverse
-from django.contrib.auth.models import User
-from rest_framework.test import APIClient
-from rest_framework import status
-from apps.tasks.models.tasks import Tasks
+import pytest
 import json
 from datetime import date
+from django.urls import reverse
+from django.contrib.auth.models import User
+from rest_framework import status
+from rest_framework.test import APIClient
+from apps.tasks.models.tasks import Tasks
 
 
-class TasksViewSetTestCase(TestCase):
-    """
-    Testes para o TasksViewSet que gerencia as operações CRUD de tarefas.
-    """
+@pytest.fixture
+def api_client():
+    """Fixture para criar um cliente API."""
+    return APIClient()
 
-    def setUp(self):
-        """
-        Configuração inicial para os testes.
-        Cria usuários e tarefas para serem usados nos testes.
-        """
-        # Cria usuários para teste
-        self.user1 = User.objects.create_user(
-            username='usuario_teste1',
-            email='teste1@example.com',
-            password='senha123'
-        )
-        
-        self.user2 = User.objects.create_user(
-            username='usuario_teste2',
-            email='teste2@example.com',
-            password='senha123'
-        )
-        
-        # Cria tarefas para o usuário 1
-        self.task1 = Tasks.objects.create(
-            usuario=self.user1,
-            titulo='Tarefa 1',
-            descricao='Descrição da tarefa 1',
-            prioridade='A',
-            prazo=date.today(),
-            status='P'
-        )
-        
-        self.task2 = Tasks.objects.create(
-            usuario=self.user1,
-            titulo='Tarefa 2',
-            descricao='Descrição da tarefa 2',
-            prioridade='M',
-            prazo=date.today(),
-            status='EA'
-        )
-        
-        # Cria uma tarefa para o usuário 2
-        self.task3 = Tasks.objects.create(
-            usuario=self.user2,
-            titulo='Tarefa 3',
-            descricao='Descrição da tarefa 3',
-            prioridade='B',
-            prazo=date.today(),
-            status='C'
-        )
-        
-        # Cliente API para fazer requisições
-        self.client = APIClient()
-        
-        # URLs para os endpoints
-        self.tasks_url = reverse('tasks-list')
+
+@pytest.fixture
+def user1():
+    """Fixture para criar o primeiro usuário de teste."""
+    return User.objects.create_user(
+        username='usuario_teste1',
+        email='teste1@example.com',
+        password='senha123'
+    )
+
+
+@pytest.fixture
+def user2():
+    """Fixture para criar o segundo usuário de teste."""
+    return User.objects.create_user(
+        username='usuario_teste2',
+        email='teste2@example.com',
+        password='senha123'
+    )
+
+
+@pytest.fixture
+def task1(user1):
+    """Fixture para criar uma tarefa para o usuário 1."""
+    return Tasks.objects.create(
+        usuario=user1,
+        titulo='Tarefa 1',
+        descricao='Descrição da tarefa 1',
+        prioridade='A',
+        prazo=date.today(),
+        status='P'
+    )
+
+
+@pytest.fixture
+def task2(user1):
+    """Fixture para criar outra tarefa para o usuário 1."""
+    return Tasks.objects.create(
+        usuario=user1,
+        titulo='Tarefa 2',
+        descricao='Descrição da tarefa 2',
+        prioridade='M',
+        prazo=date.today(),
+        status='EA'
+    )
+
+
+@pytest.fixture
+def task3(user2):
+    """Fixture para criar uma tarefa para o usuário 2."""
+    return Tasks.objects.create(
+        usuario=user2,
+        titulo='Tarefa 3',
+        descricao='Descrição da tarefa 3',
+        prioridade='B',
+        prazo=date.today(),
+        status='C'
+    )
+
+
+@pytest.fixture
+def tasks_url():
+    """Fixture para a URL da lista de tarefas."""
+    return reverse('tasks-list')
+
+
+@pytest.mark.django_db
+def test_list_tasks_authenticated_returns_only_user_tasks(api_client, user1, task1, task2, task3, tasks_url):
+    """Testa se um usuário autenticado consegue listar apenas suas próprias tarefas."""
+    # Arrange
+    api_client.force_authenticate(user=user1)
     
-    def test_list_tasks_authenticated(self):
-        """
-        Testa se um usuário autenticado consegue listar apenas suas próprias tarefas.
-        """
-        # Autentica o usuário 1
-        self.client.force_authenticate(user=self.user1)
-        
-        # Faz a requisição GET para listar tarefas
-        response = self.client.get(self.tasks_url)
-        
-        # Verifica se a resposta foi bem-sucedida
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
-        # Verifica se apenas as tarefas do usuário 1 foram retornadas
-        self.assertEqual(len(response.data), 2)
-        
-        # Verifica se os títulos das tarefas estão corretos
-        task_titles = [task['titulo'] for task in response.data]
-        self.assertIn('Tarefa 1', task_titles)
-        self.assertIn('Tarefa 2', task_titles)
-        self.assertNotIn('Tarefa 3', task_titles)
+    # Act
+    response = api_client.get(tasks_url)
     
-    def test_list_tasks_unauthenticated(self):
-        """
-        Testa se um usuário não autenticado não consegue listar tarefas.
-        """
-        # Faz a requisição GET sem autenticação
-        response = self.client.get(self.tasks_url)
-        
-        # Verifica se a resposta foi não autorizada
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 2
+    task_titles = [task['titulo'] for task in response.data]
+    assert 'Tarefa 1' in task_titles
+    assert 'Tarefa 2' in task_titles
+    assert 'Tarefa 3' not in task_titles
+
+
+@pytest.mark.django_db
+def test_list_tasks_unauthenticated_returns_401(api_client, tasks_url):
+    """Testa se um usuário não autenticado não consegue listar tarefas."""
+    # Act
+    response = api_client.get(tasks_url)
     
-    def test_create_task_authenticated(self):
-        """
-        Testa se um usuário autenticado consegue criar uma tarefa para si mesmo.
-        """
-        # Autentica o usuário 1
-        self.client.force_authenticate(user=self.user1)
-        
-        # Dados para criar uma nova tarefa
-        task_data = {
-            'usuario': 'usuario_teste1',
-            'titulo': 'Nova Tarefa',
-            'descricao': 'Descrição da nova tarefa',
-            'prioridade': 'M',
-            'prazo': date.today().isoformat(),
-            'status': 'P'
-        }
-        
-        # Faz a requisição POST para criar a tarefa
-        response = self.client.post(
-            self.tasks_url,
-            data=json.dumps(task_data),
-            content_type='application/json'
-        )
-        
-        # Verifica se a resposta foi bem-sucedida
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        
-        # Verifica se a tarefa foi criada no banco de dados
-        self.assertTrue(Tasks.objects.filter(titulo='Nova Tarefa').exists())
+    # Assert
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_create_task_authenticated_creates_new_task(api_client, user1, tasks_url):
+    """Testa se um usuário autenticado consegue criar uma tarefa para si mesmo."""
+    # Arrange
+    api_client.force_authenticate(user=user1)
+    task_data = {
+        'usuario': 'usuario_teste1',
+        'titulo': 'Nova Tarefa',
+        'descricao': 'Descrição da nova tarefa',
+        'prioridade': 'M',
+        'prazo': date.today().isoformat(),
+        'status': 'P'
+    }
     
-    def test_create_task_for_another_user(self):
-        """
-        Testa se um usuário não consegue criar uma tarefa para outro usuário.
-        """
-        # Autentica o usuário 1
-        self.client.force_authenticate(user=self.user1)
-        
-        # Tenta criar uma tarefa para o usuário 2
-        task_data = {
-            'usuario': 'usuario_teste2',
-            'titulo': 'Tarefa Não Permitida',
-            'descricao': 'Tentativa de criar tarefa para outro usuário',
-            'prioridade': 'B',
-            'prazo': date.today().isoformat(),
-            'status': 'P'
-        }
-        
-        # Faz a requisição POST
-        response = self.client.post(
-            self.tasks_url,
-            data=json.dumps(task_data),
-            content_type='application/json'
-        )
-        
-        # Verifica se a resposta foi proibida
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        
-        # Verifica se a tarefa não foi criada
-        self.assertFalse(Tasks.objects.filter(titulo='Tarefa Não Permitida').exists())
+    # Act
+    response = api_client.post(
+        tasks_url,
+        data=json.dumps(task_data),
+        content_type='application/json'
+    )
     
-    def test_retrieve_own_task(self):
-        """
-        Testa se um usuário consegue recuperar detalhes de sua própria tarefa.
-        """
-        # Autentica o usuário 1
-        self.client.force_authenticate(user=self.user1)
-        
-        # URL para a tarefa específica
-        task_detail_url = reverse('tasks-detail', args=[self.task1.id])
-        
-        # Faz a requisição GET
-        response = self.client.get(task_detail_url)
-        
-        # Verifica se a resposta foi bem-sucedida
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
-        # Verifica se os dados da tarefa estão corretos
-        self.assertEqual(response.data['titulo'], 'Tarefa 1')
-        self.assertEqual(response.data['descricao'], 'Descrição da tarefa 1')
+    # Assert
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Tasks.objects.filter(titulo='Nova Tarefa').exists()
+
+
+@pytest.mark.django_db
+def test_create_task_for_another_user_returns_403(api_client, user1, user2, tasks_url):
+    """Testa se um usuário não consegue criar uma tarefa para outro usuário."""
+    # Arrange
+    api_client.force_authenticate(user=user1)
+    task_data = {
+        'usuario': 'usuario_teste2',
+        'titulo': 'Tarefa Não Permitida',
+        'descricao': 'Tentativa de criar tarefa para outro usuário',
+        'prioridade': 'B',
+        'prazo': date.today().isoformat(),
+        'status': 'P'
+    }
     
-    def test_retrieve_another_users_task(self):
-        """
-        Testa se um usuário não consegue recuperar detalhes de uma tarefa de outro usuário.
-        """
-        # Autentica o usuário 1
-        self.client.force_authenticate(user=self.user1)
-        
-        # URL para a tarefa do usuário 2
-        task_detail_url = reverse('tasks-detail', args=[self.task3.id])
-        
-        # Faz a requisição GET
-        response = self.client.get(task_detail_url)
-        
-        # Verifica se a resposta foi não encontrada (404)
-        # Isso ocorre porque o get_queryset filtra apenas as tarefas do usuário autenticado
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    # Act
+    response = api_client.post(
+        tasks_url,
+        data=json.dumps(task_data),
+        content_type='application/json'
+    )
     
-    def test_update_own_task(self):
-        """
-        Testa se um usuário consegue atualizar sua própria tarefa.
-        """
-        # Autentica o usuário 1
-        self.client.force_authenticate(user=self.user1)
-        
-        # URL para a tarefa específica
-        task_detail_url = reverse('tasks-detail', args=[self.task1.id])
-        
-        # Dados para atualização
-        update_data = {
-            'usuario': 'usuario_teste1',
-            'titulo': 'Tarefa 1 Atualizada',
-            'descricao': 'Descrição atualizada',
-            'prioridade': 'B',
-            'prazo': date.today().isoformat(),
-            'status': 'EA'
-        }
-        
-        # Faz a requisição PUT
-        response = self.client.put(
-            task_detail_url,
-            data=json.dumps(update_data),
-            content_type='application/json'
-        )
-        
-        # Verifica se a resposta foi bem-sucedida
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
-        # Verifica se a tarefa foi atualizada no banco de dados
-        updated_task = Tasks.objects.get(id=self.task1.id)
-        self.assertEqual(updated_task.titulo, 'Tarefa 1 Atualizada')
-        self.assertEqual(updated_task.status, 'EA')
+    # Assert
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert not Tasks.objects.filter(titulo='Tarefa Não Permitida').exists()
+
+
+@pytest.mark.django_db
+def test_retrieve_own_task_returns_task_details(api_client, user1, task1):
+    """Testa se um usuário consegue recuperar detalhes de sua própria tarefa."""
+    # Arrange
+    api_client.force_authenticate(user=user1)
+    task_detail_url = reverse('tasks-detail', args=[task1.id])
     
-    def test_delete_own_task(self):
-        """
-        Testa se um usuário consegue excluir sua própria tarefa.
-        """
-        # Autentica o usuário 1
-        self.client.force_authenticate(user=self.user1)
-        
-        # URL para a tarefa específica
-        task_detail_url = reverse('tasks-detail', args=[self.task1.id])
-        
-        # Faz a requisição DELETE
-        response = self.client.delete(task_detail_url)
-        
-        # Verifica se a resposta foi bem-sucedida (204 No Content)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        
-        # Verifica se a tarefa foi removida do banco de dados
-        self.assertFalse(Tasks.objects.filter(id=self.task1.id).exists())
+    # Act
+    response = api_client.get(task_detail_url)
     
-    def test_delete_another_users_task(self):
-        """
-        Testa se um usuário não consegue excluir a tarefa de outro usuário.
-        """
-        # Autentica o usuário 1
-        self.client.force_authenticate(user=self.user1)
-        
-        # URL para a tarefa do usuário 2
-        task_detail_url = reverse('tasks-detail', args=[self.task3.id])
-        
-        # Faz a requisição DELETE
-        response = self.client.delete(task_detail_url)
-        
-        # Verifica se a resposta foi não encontrada (404)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        
-        # Verifica se a tarefa ainda existe no banco de dados
-        self.assertTrue(Tasks.objects.filter(id=self.task3.id).exists())
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data['titulo'] == 'Tarefa 1'
+    assert response.data['descricao'] == 'Descrição da tarefa 1'
+
+
+@pytest.mark.django_db
+def test_retrieve_another_users_task_returns_404(api_client, user1, task3):
+    """Testa se um usuário não consegue recuperar detalhes de uma tarefa de outro usuário."""
+    # Arrange
+    api_client.force_authenticate(user=user1)
+    task_detail_url = reverse('tasks-detail', args=[task3.id])
+    
+    # Act
+    response = api_client.get(task_detail_url)
+    
+    # Assert
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_update_own_task_updates_task(api_client, user1, task1):
+    """Testa se um usuário consegue atualizar sua própria tarefa."""
+    # Arrange
+    api_client.force_authenticate(user=user1)
+    task_detail_url = reverse('tasks-detail', args=[task1.id])
+    update_data = {
+        'usuario': 'usuario_teste1',
+        'titulo': 'Tarefa 1 Atualizada',
+        'descricao': 'Descrição atualizada',
+        'prioridade': 'B',
+        'prazo': date.today().isoformat(),
+        'status': 'EA'
+    }
+    
+    # Act
+    response = api_client.put(
+        task_detail_url,
+        data=json.dumps(update_data),
+        content_type='application/json'
+    )
+    
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+    updated_task = Tasks.objects.get(id=task1.id)
+    assert updated_task.titulo == 'Tarefa 1 Atualizada'
+    assert updated_task.status == 'EA'
+
+
+@pytest.mark.django_db
+def test_delete_own_task_removes_task(api_client, user1, task1):
+    """Testa se um usuário consegue excluir sua própria tarefa."""
+    # Arrange
+    api_client.force_authenticate(user=user1)
+    task_detail_url = reverse('tasks-detail', args=[task1.id])
+    
+    # Act
+    response = api_client.delete(task_detail_url)
+    
+    # Assert
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not Tasks.objects.filter(id=task1.id).exists()
+
+
+@pytest.mark.django_db
+def test_delete_another_users_task_returns_404(api_client, user1, task3):
+    """Testa se um usuário não consegue excluir a tarefa de outro usuário."""
+    # Arrange
+    api_client.force_authenticate(user=user1)
+    task_detail_url = reverse('tasks-detail', args=[task3.id])
+    
+    # Act
+    response = api_client.delete(task_detail_url)
+    
+    # Assert
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert Tasks.objects.filter(id=task3.id).exists()
