@@ -145,4 +145,4 @@ Para informações mais detalhadas sobre os endpoints disponíveis e como utiliz
 
 Este projeto é parte de uma solução completa que inclui também um front-end desenvolvido separadamente. O front-end consome esta API para fornecer uma interface gráfica amigável para gerenciamento de tarefas.
 
-Para acessar o front-end, consulte o repositório correspondente (link a ser adicionado).
+Para acessar o front-end, consulte o seguinte repositório [Link](https://github.com/Davi-D18/task_collab_front)
